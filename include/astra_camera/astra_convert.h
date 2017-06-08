@@ -30,7 +30,6 @@
  *      Author: Tim Liu (liuhua@orbbec.com)
  */
 
-
 #ifndef ASTRA_CONVERT_H_
 #define ASTRA_CONVERT_H_
 

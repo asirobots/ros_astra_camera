@@ -50,26 +50,25 @@ class AstraDevice;
 class AstraDeviceManager
 {
 public:
-  AstraDeviceManager();
-  virtual ~AstraDeviceManager();
+    AstraDeviceManager();
+    virtual ~AstraDeviceManager();
 
-  static boost::shared_ptr<AstraDeviceManager> getSingelton();
+    static boost::shared_ptr<AstraDeviceManager> getSingelton();
 
-  boost::shared_ptr<std::vector<AstraDeviceInfo> > getConnectedDeviceInfos() const;
-  boost::shared_ptr<std::vector<std::string> > getConnectedDeviceURIs() const;
-  std::size_t getNumOfConnectedDevices() const;
+    boost::shared_ptr<std::vector<AstraDeviceInfo> > getConnectedDeviceInfos() const;
+    boost::shared_ptr<std::vector<std::string> > getConnectedDeviceURIs() const;
+    std::size_t getNumOfConnectedDevices() const;
 
-  boost::shared_ptr<AstraDevice> getAnyDevice();
-  boost::shared_ptr<AstraDevice> getDevice(const std::string& device_URI);
+    boost::shared_ptr<AstraDevice> getAnyDevice();
+    boost::shared_ptr<AstraDevice> getDevice(const std::string& device_URI);
 
-  std::string getSerial(const std::string& device_URI) const;
+    std::string getSerial(const std::string& device_URI) const;
 
 protected:
-  boost::shared_ptr<AstraDeviceListener> device_listener_;
+    boost::shared_ptr<AstraDeviceListener> device_listener_;
 
-  static boost::shared_ptr<AstraDeviceManager> singelton_;
+    static boost::shared_ptr<AstraDeviceManager> singelton_;
 };
-
 
 std::ostream& operator <<(std::ostream& stream, const AstraDeviceManager& device_manager);
 

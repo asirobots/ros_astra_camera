@@ -46,7 +46,7 @@
 #if defined _WIN32 && defined _MSC_VER
 # define __PRETTY_FUNCTION__ __FUNCTION__
 #endif
-#define THROW_OPENNI_EXCEPTION(format,...) throwOpenNIException( __PRETTY_FUNCTION__, __FILE__, __LINE__, format , ##__VA_ARGS__ )
+#define THROW_OPENNI_EXCEPTION(format,...) throwOpenNIException( __PRETTY_FUNCTION__, __FILE__, __LINE__, format, ## __VA_ARGS__ )
 
 namespace astra_wrapper
 {
@@ -58,34 +58,34 @@ namespace astra_wrapper
 class AstraException : public std::exception
 {
 public:
-  AstraException(const std::string& function_name,
+    AstraException(const std::string& function_name,
                    const std::string& file_name,
                    unsigned line_number,
                    const std::string& message) throw ();
 
-  virtual ~AstraException() throw ();
-  AstraException & operator=(const AstraException& exception) throw ();
-  virtual const char* what() const throw ();
+    virtual ~AstraException() throw ();
+    AstraException & operator=(const AstraException& exception) throw ();
+    virtual const char* what() const throw ();
 
-  const std::string& getFunctionName() const throw ();
-  const std::string& getFileName() const throw ();
-  unsigned getLineNumber() const throw ();
+    const std::string& getFunctionName() const throw ();
+    const std::string& getFileName() const throw ();
+    unsigned getLineNumber() const throw ();
 
 protected:
-  std::string function_name_;
-  std::string file_name_;
-  unsigned line_number_;
-  std::string message_;
-  std::string message_long_;
+    std::string function_name_;
+    std::string file_name_;
+    unsigned line_number_;
+    std::string message_;
+    std::string message_long_;
 };
 
 inline void throwOpenNIException(const char* function, const char* file, unsigned line, const char* format, ...)
 {
-  static char msg[1024];
-  va_list args;
-  va_start(args, format);
-  vsprintf(msg, format, args);
-  throw AstraException(function, file, line, msg);
+    static char msg[1024];
+    va_list args;
+    va_start(args, format);
+    vsprintf(msg, format, args);
+    throw AstraException(function, file, line, msg);
 }
 } // namespace astra_camera
 #endif

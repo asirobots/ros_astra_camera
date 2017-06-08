@@ -42,11 +42,11 @@ namespace astra_wrapper
 
 struct AstraDeviceInfo
 {
-  std::string uri_;
-  std::string vendor_;
-  std::string name_;
-  uint16_t vendor_id_;
-  uint16_t product_id_;
+    std::string uri_;
+    std::string vendor_;
+    std::string name_;
+    uint16_t vendor_id_;
+    uint16_t product_id_;
 };
 
 std::ostream& operator << (std::ostream& stream, const AstraDeviceInfo& device_info);

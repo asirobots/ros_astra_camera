@@ -38,16 +38,9 @@
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 
-//#include <sensor_msgs/Image.h>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <builtin_interfaces/msg/time.hpp>
-
-//#include <dynamic_reconfigure/server.h>
-//#include <astra_camera/AstraConfig.h>
-
-//#include <image_transport/image_transport.h>
-//#include <camera_info_manager/camera_info_manager.h>
 
 #include <string>
 #include <vector>
@@ -55,9 +48,7 @@
 #include "astra_camera/astra_device_manager.h"
 #include "astra_camera/astra_device.h"
 #include "astra_camera/astra_video_mode.h"
-//#include "astra_camera/GetSerial.h"
 
-//#include <ros/ros.h>
 #include <rcl/time.h>
 #include <rclcpp/rclcpp.hpp>
 #include "astra_camera/ros12_shim.h"
@@ -65,127 +56,104 @@
 namespace astra_wrapper
 {
 
-class AstraDriver
+class AstraDriver : public rclcpp::Node
 {
 public:
-  //AstraDriver(ros::NodeHandle& n, ros::NodeHandle& pnh) ;
-  AstraDriver(rclcpp::node::Node::SharedPtr& n, rclcpp::node::Node::SharedPtr& pnh, size_t width, size_t height, double framerate,
-              size_t dwidth, size_t dheight, double dframerate, PixelFormat dformat);
+    AstraDriver(size_t width, size_t height, double framerate, size_t dwidth, size_t dheight, double dframerate, PixelFormat dformat);
 
 private:
-  //typedef astra_camera::AstraConfig Config;
-  //typedef dynamic_reconfigure::Server<Config> ReconfigureServer;
 
-  void newIRFrameCallback(sensor_msgs::msg::Image::SharedPtr image);
-  void newColorFrameCallback(sensor_msgs::msg::Image::SharedPtr image);
-  void newDepthFrameCallback(sensor_msgs::msg::Image::SharedPtr image);
+    void newIRFrameCallback(sensor_msgs::msg::Image::SharedPtr image);
+    void newColorFrameCallback(sensor_msgs::msg::Image::SharedPtr image);
+    void newDepthFrameCallback(sensor_msgs::msg::Image::SharedPtr image);
 
-  // Methods to get calibration parameters for the various cameras
-  sensor_msgs::msg::CameraInfo::SharedPtr getDefaultCameraInfo(int width, int height, double f) const;
-  sensor_msgs::msg::CameraInfo::SharedPtr getColorCameraInfo(int width, int height, builtin_interfaces::msg::Time time) const;
-  sensor_msgs::msg::CameraInfo::SharedPtr getIRCameraInfo(int width, int height, builtin_interfaces::msg::Time time) const;
-  sensor_msgs::msg::CameraInfo::SharedPtr getDepthCameraInfo(int width, int height, builtin_interfaces::msg::Time time) const;
+    // Methods to get calibration parameters for the various cameras
+    sensor_msgs::msg::CameraInfo::SharedPtr getDefaultCameraInfo(int width, int height, double f) const;
+    sensor_msgs::msg::CameraInfo::SharedPtr getColorCameraInfo(int width, int height, builtin_interfaces::msg::Time time) const;
+    sensor_msgs::msg::CameraInfo::SharedPtr getIRCameraInfo(int width, int height, builtin_interfaces::msg::Time time) const;
+    sensor_msgs::msg::CameraInfo::SharedPtr getDepthCameraInfo(int width, int height, builtin_interfaces::msg::Time time) const;
 
-  void readConfigFromParameterServer();
+    void readConfigFromParameterServer();
 
-  // resolves non-URI device IDs to URIs, e.g. '#1' is resolved to the URI of the first device
-  std::string resolveDeviceURI(const std::string& device_id) throw(AstraException);
-  void initDevice();
+    // resolves non-URI device IDs to URIs, e.g. '#1' is resolved to the URI of the first device
+    std::string resolveDeviceURI(const std::string& device_id) throw(AstraException);
+    void initDevice();
 
-  void advertiseROSTopics();
+    void advertiseROSTopics();
 
-  void colorConnectCb();
-  void depthConnectCb();
-  void irConnectCb();
+    void colorConnectCb();
+    void depthConnectCb();
+    void irConnectCb();
 
-  //bool getSerialCb(astra_camera::GetSerialRequest& req, astra_camera::GetSerialResponse& res);
+    void genVideoModeTableMap();
+    int lookupVideoModeFromDynConfig(int mode_nr, AstraVideoMode& video_mode);
 
-  //void configCb(Config &config, uint32_t level);
+    sensor_msgs::msg::Image::UniquePtr rawToFloatingPointConversion(sensor_msgs::msg::Image::SharedPtr raw_image);
 
-  //void applyConfigToOpenNIDevice();
+    void setIRVideoMode(const AstraVideoMode& ir_video_mode);
+    void setColorVideoMode(const AstraVideoMode& color_video_mode);
+    void setDepthVideoMode(const AstraVideoMode& depth_video_mode);
 
-  void genVideoModeTableMap();
-  int lookupVideoModeFromDynConfig(int mode_nr, AstraVideoMode& video_mode);
+    rclcpp::node::Node::SharedPtr nh_;
+    rclcpp::node::Node::SharedPtr pnh_;
 
-  sensor_msgs::msg::Image::SharedPtr rawToFloatingPointConversion(sensor_msgs::msg::Image::SharedPtr raw_image);
+    boost::shared_ptr<AstraDeviceManager> device_manager_;
+    boost::shared_ptr<AstraDevice> device_;
 
-  void setIRVideoMode(const AstraVideoMode& ir_video_mode);
-  void setColorVideoMode(const AstraVideoMode& color_video_mode);
-  void setDepthVideoMode(const AstraVideoMode& depth_video_mode);
+    std::string device_id_;
 
-  rclcpp::node::Node::SharedPtr nh_;
-  rclcpp::node::Node::SharedPtr pnh_;
+    /** \brief reconfigure server*/
+    bool config_init_;
 
-  boost::shared_ptr<AstraDeviceManager> device_manager_;
-  boost::shared_ptr<AstraDevice> device_;
+    std::set<std::string>  alreadyOpen;
+    boost::mutex connect_mutex_;
+    // published topics
+    rclcpp::publisher::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_depth_raw_;
+    rclcpp::publisher::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_color_;
+    rclcpp::publisher::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_ir_;
+    rclcpp::publisher::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr pub_depth_camera_info_;
 
-  std::string device_id_;
+    /** \brief Camera info manager objects. */
+    AstraVideoMode ir_video_mode_;
+    AstraVideoMode color_video_mode_;
+    AstraVideoMode depth_video_mode_;
 
-  /** \brief get_serial server*/
-  //ros::ServiceServer get_serial_server;
+    std::string ir_frame_id_;
+    std::string color_frame_id_;
+    std::string depth_frame_id_;
 
-  /** \brief reconfigure server*/
-  //boost::shared_ptr<ReconfigureServer> reconfigure_server_;
-  bool config_init_;
+    std::string color_info_url_, ir_info_url_;
 
-  std::set<std::string>  alreadyOpen;
-  boost::mutex connect_mutex_;
-  // published topics
-  //image_transport::CameraPublisher pub_color_;
-  //image_transport::CameraPublisher pub_depth_;
-  rclcpp::publisher::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_depth_raw_;
-  rclcpp::publisher::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_color_;
-  rclcpp::publisher::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_ir_;
-  rclcpp::publisher::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr pub_depth_camera_info_;
-  //image_transport::CameraPublisher pub_depth_raw_;
-  //image_transport::CameraPublisher pub_ir_;
-  //ros::Publisher pub_projector_info_;
+    bool color_depth_synchronization_;
+    bool depth_registration_;
 
-  /** \brief Camera info manager objects. */
-  //boost::shared_ptr<camera_info_manager::CameraInfoManager> color_info_manager_, ir_info_manager_;
+    std::map<int, AstraVideoMode> video_modes_lookup_;
 
-  AstraVideoMode ir_video_mode_;
-  AstraVideoMode color_video_mode_;
-  AstraVideoMode depth_video_mode_;
+    // dynamic reconfigure config
+    double depth_ir_offset_x_;
+    double depth_ir_offset_y_;
+    int z_offset_mm_;
+    double z_scaling_;
 
-  std::string ir_frame_id_;
-  std::string color_frame_id_;
-  std::string depth_frame_id_ ;
+    rcl_duration_t ir_time_offset_;
+    rcl_duration_t color_time_offset_;
+    rcl_duration_t depth_time_offset_;
 
-  std::string color_info_url_, ir_info_url_;
+    int data_skip_;
 
-  bool color_depth_synchronization_;
-  bool depth_registration_;
+    int data_skip_ir_counter_;
+    int data_skip_color_counter_;
+    int data_skip_depth_counter_;
 
-  std::map<int, AstraVideoMode> video_modes_lookup_;
+    bool auto_exposure_;
+    bool auto_white_balance_;
 
-  // dynamic reconfigure config
-  double depth_ir_offset_x_;
-  double depth_ir_offset_y_;
-  int z_offset_mm_;
-  double z_scaling_;
+    bool ir_subscribers_;
+    bool color_subscribers_;
+    bool depth_subscribers_;
+    bool depth_raw_subscribers_;
 
-  rcl_duration_t ir_time_offset_;
-  rcl_duration_t color_time_offset_;
-  rcl_duration_t depth_time_offset_;
-
-  int data_skip_;
-
-  int data_skip_ir_counter_;
-  int data_skip_color_counter_;
-  int data_skip_depth_counter_;
-
-  bool auto_exposure_;
-  bool auto_white_balance_;
-
-  bool ir_subscribers_;
-  bool color_subscribers_;
-  bool depth_subscribers_;
-  bool depth_raw_subscribers_;
-
-  bool use_device_time_;
-
-  //Config old_config_;
+    bool use_device_time_;
 };
 
 }

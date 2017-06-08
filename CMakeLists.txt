@@ -10,6 +10,9 @@ find_package(sensor_msgs REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(rmw_implementation_cmake REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
+find_package(depth_to_pointcloud REQUIRED)
+find_package(image_geometry REQUIRED)
+find_package(OpenCV REQUIRED)
 
 option(FILTER "OB Filter library" ON)
 
@@ -38,6 +41,7 @@ link_directories(${CMAKE_CURRENT_BINARY_DIR}/openni2/Redist)
 include_directories(include
                     ${Boost_INCLUDE_DIRS}
                     ${CMAKE_CURRENT_BINARY_DIR}/openni2/include
+                    ${OpenCV_INCLUDE_DIRS}
                     )
 
 add_library(astra_wrapper
@@ -70,7 +74,11 @@ add_dependencies(astra_driver_lib astra_openni2)
 add_executable(astra_camera_node
    ros/astra_camera_node.cpp
 )
-target_link_libraries(astra_camera_node astra_driver_lib)
+ament_target_dependencies(astra_camera_node
+  "depth_to_pointcloud"
+  "image_geometry"
+)
+target_link_libraries(astra_camera_node astra_driver_lib ${OpenCV_LIBS})
 add_dependencies(astra_camera_node astra_openni2)
 
 install(TARGETS astra_camera_node

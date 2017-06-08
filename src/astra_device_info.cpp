@@ -35,16 +35,14 @@
 namespace astra_wrapper
 {
 
-
-std::ostream& operator << (std::ostream& stream, const AstraDeviceInfo& device_info) {
-  stream << "Uri: " << device_info.uri_ << " (Vendor: " << device_info.vendor_ <<
-                                           ", Name: " << device_info.name_ <<
-                                           ", Vendor ID: " << std::hex << device_info.vendor_id_ <<
-                                           ", Product ID: " << std::hex << device_info.product_id_ <<
-                                             ")" << std::endl;
-  return stream;
+std::ostream& operator << (std::ostream& stream, const AstraDeviceInfo& device_info)
+{
+    stream << "Uri: " << device_info.uri_ << " (Vendor: " << device_info.vendor_ <<
+        ", Name: " << device_info.name_ <<
+        ", Vendor ID: " << std::hex << device_info.vendor_id_ <<
+        ", Product ID: " << std::hex << device_info.product_id_ <<
+        ")" << std::endl;
+    return stream;
 }
-
-
 
 } //namespace openni2_wrapper

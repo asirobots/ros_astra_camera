@@ -39,17 +39,21 @@ namespace astra_camera
 class AstraDriverNodelet : public nodelet::Nodelet
 {
 public:
-  AstraDriverNodelet()  {};
+    AstraDriverNodelet()
+    {
+    }
 
-  ~AstraDriverNodelet() {}
+    ~AstraDriverNodelet()
+    {
+    }
 
 private:
-  virtual void onInit()
-  {
-    lp.reset(new astra_wrapper::AstraDriver(getNodeHandle(), getPrivateNodeHandle()));
-  };
+    virtual void onInit()
+    {
+        lp.reset(new astra_wrapper::AstraDriver(getNodeHandle(), getPrivateNodeHandle()));
+    }
 
-  boost::shared_ptr<astra_wrapper::AstraDriver> lp;
+    boost::shared_ptr<astra_wrapper::AstraDriver> lp;
 };
 
 }

@@ -49,29 +49,30 @@ class AstraTimerFilter;
 class AstraFrameListener : public openni::VideoStream::NewFrameListener
 {
 public:
-  AstraFrameListener();
+    AstraFrameListener();
 
-  virtual ~AstraFrameListener()
-  { };
+    virtual ~AstraFrameListener()
+    {
+    }
 
-  void onNewFrame(openni::VideoStream& stream);
+    void onNewFrame(openni::VideoStream& stream);
 
-  void setCallback(FrameCallbackFunction& callback)
-  {
-    callback_ = callback;
-  }
+    void setCallback(FrameCallbackFunction& callback)
+    {
+        callback_ = callback;
+    }
 
-  void setUseDeviceTimer(bool enable);
+    void setUseDeviceTimer(bool enable);
 
 private:
-  openni::VideoFrameRef m_frame;
+    openni::VideoFrameRef m_frame;
 
-  FrameCallbackFunction callback_;
+    FrameCallbackFunction callback_;
 
-  bool user_device_timer_;
-  boost::shared_ptr<AstraTimerFilter> timer_filter_;
+    bool user_device_timer_;
+    boost::shared_ptr<AstraTimerFilter> timer_filter_;
 
-  double prev_time_stamp_;
+    double prev_time_stamp_;
 };
 
 }
