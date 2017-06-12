@@ -49,10 +49,11 @@
 namespace astra_wrapper
 {
 
-AstraDriver::AstraDriver(rclcpp::node::Node::SharedPtr& n, rclcpp::node::Node::SharedPtr& pnh, size_t width, size_t height, double framerate, size_t dwidth, size_t dheight, double dframerate, PixelFormat dformat) :
+AstraDriver::AstraDriver(rclcpp::node::Node::SharedPtr& n, rclcpp::node::Node::SharedPtr& pnh, std::string device_num, size_t width, size_t height, double framerate, size_t dwidth, size_t dheight, double dframerate, PixelFormat dformat) :
     nh_(n),
     pnh_(pnh),
     device_manager_(AstraDeviceManager::getSingelton()),
+    device_id_(device_num),
     config_init_(false),
     depth_registration_(false),
     data_skip_ir_counter_(0),
@@ -729,6 +730,8 @@ sensor_msgs::msg::CameraInfo::SharedPtr AstraDriver::getDepthCameraInfo(int widt
 void AstraDriver::readConfigFromParameterServer()
 {
   depth_frame_id_ = std::string("openni_depth_optical_frame");
+  if (!device_id_.empty())
+    depth_frame_id_ += "_" + device_id_.substr(1,device_id_.length()-1);
 // TODO
 /*
   if (!pnh_.getParam("device_id", device_id_))
