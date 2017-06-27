@@ -73,8 +73,17 @@ add_executable(astra_camera_node
 target_link_libraries(astra_camera_node astra_driver_lib)
 add_dependencies(astra_camera_node astra_openni2)
 
+add_executable(list_devices
+   src/list_devices.cpp
+)
+target_link_libraries(list_devices astra_wrapper)
+
 install(TARGETS astra_camera_node
   DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/
+)
+
+install(TARGETS list_devices
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/
 )
 
 install(TARGETS astra_wrapper astra_driver_lib
