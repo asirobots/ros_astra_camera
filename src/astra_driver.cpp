@@ -731,7 +731,18 @@ void AstraDriver::readConfigFromParameterServer()
 {
   depth_frame_id_ = std::string("openni_depth_optical_frame");
   if (!device_id_.empty())
-    depth_frame_id_ += "_" + device_id_.substr(1,device_id_.length()-1);
+  {
+    size_t pos = std::string::npos;
+    if ((pos = device_id_.find('#')) != std::string::npos)
+      depth_frame_id_ += "_" + device_id_.substr(pos+1,device_id_.length()-1);
+    else if ((pos = device_id_.find('@')) != std::string::npos)
+      depth_frame_id_ += "_" + device_id_.substr(pos+1,device_id_.length()-1);
+    else
+      depth_frame_id_ += "_" + device_id_;
+
+
+
+  }
 // TODO
 /*
   if (!pnh_.getParam("device_id", device_id_))
@@ -821,11 +832,12 @@ std::string AstraDriver::resolveDeviceURI(const std::string& device_id) throw(As
     for (size_t i = 0; i < available_device_URIs->size(); ++i)
     {
       std::string s = (*available_device_URIs)[i];
-      if (s.find(bus) != std::string::npos)
+        size_t pos = std::string::npos;
+      if ((pos = s.find(bus)) != std::string::npos)
       {
         // this matches our bus, check device number
-        --device_number;
-        if (device_number <= 0)
+          std::string uri_end = s.substr(pos+bus.length()+1, s.length()-1);
+        if (0 == uri_end.compare(device_number_str.str()))
           return s;
       }
     }
@@ -907,6 +919,7 @@ void AstraDriver::initDevice()
       	continue;
       }
       #endif
+      ROS_INFO("Attaching to device %s", device_URI.c_str());
       device_ = device_manager_->getDevice(device_URI);
     }
     catch (const AstraException& exception)
