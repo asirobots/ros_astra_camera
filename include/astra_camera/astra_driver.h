@@ -42,6 +42,7 @@
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <builtin_interfaces/msg/time.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
 
 //#include <dynamic_reconfigure/server.h>
 //#include <astra_camera/AstraConfig.h>
@@ -87,6 +88,7 @@ private:
   sensor_msgs::msg::CameraInfo::SharedPtr getDepthCameraInfo(int width, int height, builtin_interfaces::msg::Time time) const;
 
   void readConfigFromParameterServer();
+  std::string ParseSerialNum(std::string id);
 
   // resolves non-URI device IDs to URIs, e.g. '#1' is resolved to the URI of the first device
   std::string resolveDeviceURI(const std::string& device_id) throw(AstraException);
@@ -108,6 +110,8 @@ private:
   int lookupVideoModeFromDynConfig(int mode_nr, AstraVideoMode& video_mode);
 
   sensor_msgs::msg::Image::SharedPtr rawToFloatingPointConversion(sensor_msgs::msg::Image::SharedPtr raw_image);
+  void DepthImageToPointCloud2(sensor_msgs::msg::Image::SharedPtr & float_image, sensor_msgs::msg::CameraInfo::SharedPtr & cam_info, sensor_msgs::msg::PointCloud2::SharedPtr & cloud);
+
 
   void setIRVideoMode(const AstraVideoMode& ir_video_mode);
   void setColorVideoMode(const AstraVideoMode& color_video_mode);
@@ -137,6 +141,7 @@ private:
   rclcpp::publisher::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_color_;
   rclcpp::publisher::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_ir_;
   rclcpp::publisher::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr pub_depth_camera_info_;
+  rclcpp::publisher::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_depth_pointcloud_;
   //image_transport::CameraPublisher pub_depth_raw_;
   //image_transport::CameraPublisher pub_ir_;
   //ros::Publisher pub_projector_info_;

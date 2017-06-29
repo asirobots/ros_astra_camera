@@ -10,6 +10,8 @@ find_package(sensor_msgs REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(rmw_implementation_cmake REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
+find_package(image_geometry REQUIRED)
+find_package(OpenCV REQUIRED)
 
 option(FILTER "OB Filter library" ON)
 
@@ -54,6 +56,8 @@ ament_target_dependencies(astra_wrapper
   "builtin_interfaces"
   "rclcpp"
   "sensor_msgs"
+  "image_geometry"
+  "OpenCV"
 )
 target_link_libraries(astra_wrapper -lOpenNI2Orbbec ${Boost_LIBRARIES})
 add_dependencies(astra_wrapper astra_openni2)

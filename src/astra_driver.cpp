@@ -42,6 +42,9 @@
 #include <sensor_msgs/image_encodings.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 
+#include <astra_camera/depth_conversions.hpp>
+#include <image_geometry/pinhole_camera_model.h>
+
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread/thread.hpp>
 
@@ -209,8 +212,10 @@ void AstraDriver::advertiseROSTopics()
     //ros::SubscriberStatusCallback rssc = boost::bind(&AstraDriver::depthConnectCb, this);
     //pub_depth_raw_ = depth_it.advertiseCamera("image_raw", 1, itssc, itssc, rssc, rssc);
     //pub_depth_ = depth_raw_it.advertiseCamera("image", 1, itssc, itssc, rssc, rssc);
-    pub_depth_raw_ = nh_->create_publisher<sensor_msgs::msg::Image>("depth", custom_camera_qos_profile);
-    pub_depth_camera_info_ = nh_->create_publisher<sensor_msgs::msg::CameraInfo>("depth_camera_info", custom_camera_qos_profile);
+    //pub_depth_raw_ = nh_->create_publisher<sensor_msgs::msg::Image>("depth", custom_camera_qos_profile);
+    //pub_depth_camera_info_ = nh_->create_publisher<sensor_msgs::msg::CameraInfo>("depth_camera_info", custom_camera_qos_profile);
+    std::string depth_topic_name = "astra_" + ParseSerialNum(device_id_) + "_depth";
+    pub_depth_pointcloud_ = nh_->create_publisher<sensor_msgs::msg::PointCloud2>(depth_topic_name, custom_camera_qos_profile);
     this->depthConnectCb();
   }
 
@@ -597,9 +602,12 @@ void AstraDriver::newDepthFrameCallback(sensor_msgs::msg::Image::SharedPtr image
       //if (depth_subscribers_ )
       {
         sensor_msgs::msg::Image::SharedPtr floating_point_image = rawToFloatingPointConversion(image);
+        sensor_msgs::msg::PointCloud2::SharedPtr cloud_msg = std::make_shared<sensor_msgs::msg::PointCloud2>();
+        DepthImageToPointCloud2(floating_point_image, cam_info, cloud_msg);
         //pub_depth_.publish(floating_point_image, cam_info);
-        pub_depth_raw_->publish(floating_point_image);
-        pub_depth_camera_info_->publish(getDepthCameraInfo(image->width, image->height, image->header.stamp));
+        //pub_depth_raw_->publish(floating_point_image);
+        //pub_depth_camera_info_->publish(cam_info);
+        pub_depth_pointcloud_->publish(cloud_msg);
       }
     }
   }
@@ -727,21 +735,26 @@ sensor_msgs::msg::CameraInfo::SharedPtr AstraDriver::getDepthCameraInfo(int widt
   return info;
 }
 
+std::string AstraDriver::ParseSerialNum(std::string id)
+{
+    size_t pos = std::string::npos;
+    std::string ret_string = "";
+    if ((pos = id.find('#')) != std::string::npos)
+        ret_string = id.substr(pos+1,id.length()-1);
+    else if ((pos = id.find('@')) != std::string::npos)
+        ret_string = id.substr(pos+1,id.length()-1);
+    else
+        ret_string = id;
+
+    return ret_string;
+}
+
 void AstraDriver::readConfigFromParameterServer()
 {
   depth_frame_id_ = std::string("openni_depth_optical_frame");
   if (!device_id_.empty())
   {
-    size_t pos = std::string::npos;
-    if ((pos = device_id_.find('#')) != std::string::npos)
-      depth_frame_id_ += "_" + device_id_.substr(pos+1,device_id_.length()-1);
-    else if ((pos = device_id_.find('@')) != std::string::npos)
-      depth_frame_id_ += "_" + device_id_.substr(pos+1,device_id_.length()-1);
-    else
-      depth_frame_id_ += "_" + device_id_;
-
-
-
+    depth_frame_id_ += "_" + ParseSerialNum(device_id_);
   }
 // TODO
 /*
@@ -1105,5 +1118,34 @@ sensor_msgs::msg::Image::SharedPtr AstraDriver::rawToFloatingPointConversion(sen
 
   return new_image;
 }
+
+void AstraDriver::DepthImageToPointCloud2(sensor_msgs::msg::Image::SharedPtr & float_image, sensor_msgs::msg::CameraInfo::SharedPtr & cam_info, sensor_msgs::msg::PointCloud2::SharedPtr & cloud)
+{
+    cloud->header = float_image->header;
+    cloud->height = float_image->height;
+    cloud->width = float_image->width;
+    cloud->is_dense = false;
+    cloud->is_bigendian = false;
+    cloud->fields.clear();
+    cloud->fields.reserve(1);
+
+    sensor_msgs::PointCloud2Modifier pcd_modifier(*cloud);
+    pcd_modifier.setPointCloud2FieldsByString(1, "xyz");
+
+    // g_cam_info here is a sensor_msg::msg::CameraInfo::ConstSharedPtr,
+    // which we get from the cam_info topic.
+    image_geometry::PinholeCameraModel model;
+    model.fromCameraInfo(cam_info);
+
+    if (float_image->encoding == sensor_msgs::image_encodings::TYPE_16UC1) {
+        depth_to_pointcloud::convert<uint16_t>(float_image, cloud, model);
+    } else if (float_image->encoding == sensor_msgs::image_encodings::TYPE_32FC1) {
+        depth_to_pointcloud::convert<float>(float_image, cloud, model);
+    } else {
+        fprintf(stderr, "Depth image has unsupported encoding [%s]\n", float_image->encoding.c_str());
+    }
+    return;
+}
+
 
 }
