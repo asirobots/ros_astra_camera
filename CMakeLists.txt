@@ -82,11 +82,20 @@ add_executable(list_devices
 )
 target_link_libraries(list_devices astra_wrapper)
 
+add_executable(usb_reset
+        src/usb_reset.c
+)
+target_link_libraries(usb_reset astra_wrapper)
+
 install(TARGETS astra_camera_node
   DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/
 )
 
 install(TARGETS list_devices
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/
+)
+
+install(TARGETS usb_reset
         DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/
 )
 
