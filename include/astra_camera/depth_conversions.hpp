@@ -58,6 +58,8 @@ void convert(
   float center_x = model.cx();
   float center_y = model.cy();
 
+  uint32_t num_valid = 0;
+
   // Combine unit conversion (if necessary) with scaling by focal length for computing (X,Y)
   double unit_scaling = DepthTraits<T>::toMeters(T(1) );
   float constant_x = unit_scaling / model.fx();
@@ -69,26 +71,34 @@ void convert(
   sensor_msgs::PointCloud2Iterator<float> iter_z(*cloud_msg, "z");
   const T * depth_row = reinterpret_cast<const T *>(&depth_msg->data[0]);
   int row_step = depth_msg->step / sizeof(T);
-  for (int v = 0; v < static_cast<int>(cloud_msg->height); ++v, depth_row += row_step) {
-    for (int u = 0; u < static_cast<int>(cloud_msg->width); ++u, ++iter_x, ++iter_y, ++iter_z) {
+  for (int v = 0; v < static_cast<int>(depth_msg->height); ++v, depth_row += row_step) {
+    for (int u = 0; u < static_cast<int>(depth_msg->width); ++u) {
       T depth = depth_row[u];
 
-      // Missing points denoted by NaNs
-      if (!DepthTraits<T>::valid(depth)) {
-        if (range_max != 0.0) {
-          depth = DepthTraits<T>::fromMeters(range_max);
-        } else {
-          *iter_x = *iter_y = *iter_z = bad_point;
-          continue;
-        }
+      if (!DepthTraits<T>::valid(depth))
+      {
+        continue;
       }
 
-      // Fill in XYZ
-      *iter_x = (u - center_x) * depth * constant_x;
-      *iter_y = (v - center_y) * depth * constant_y;
-      *iter_z = DepthTraits<T>::toMeters(depth);
+      auto depth_meters = DepthTraits<T>::toMeters(depth);
+
+      if (depth_meters < range_max)
+      {
+        // Fill in XYZ
+        *iter_x = (u - center_x) * depth * constant_x;
+        *iter_y = (v - center_y) * depth * constant_y;
+        *iter_z = depth_meters;
+
+        ++iter_x;
+        ++iter_y;
+        ++iter_z;
+
+        num_valid++;
+      }
     }
   }
+
+  cloud_msg->height = num_valid;
 }
 
 }  // namespace depth_to_pointcloud
