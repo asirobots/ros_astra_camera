@@ -11,7 +11,7 @@ find_package(builtin_interfaces REQUIRED)
 find_package(rmw_implementation_cmake REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
 find_package(image_geometry REQUIRED)
-find_package(OpenCV REQUIRED)
+find_package(OpenCV 3.2.0 REQUIRED HINTS ${CMAKE_SOURCE_DIR}/../../install/share)
 
 option(FILTER "OB Filter library" ON)
 
@@ -57,7 +57,6 @@ ament_target_dependencies(astra_wrapper
   "rclcpp"
   "sensor_msgs"
   "image_geometry"
-  "OpenCV"
 )
 target_link_libraries(astra_wrapper -lOpenNI2Orbbec ${Boost_LIBRARIES})
 add_dependencies(astra_wrapper astra_openni2)
@@ -68,7 +67,7 @@ ament_target_dependencies(astra_driver_lib
   "rclcpp"
   "sensor_msgs"
 )
-target_link_libraries(astra_driver_lib astra_wrapper ${Boost_LIBRARIES})
+target_link_libraries(astra_driver_lib astra_wrapper ${Boost_LIBRARIES} ${OpenCV_LIBS})
 add_dependencies(astra_driver_lib astra_openni2)
 
 add_executable(astra_camera_node
