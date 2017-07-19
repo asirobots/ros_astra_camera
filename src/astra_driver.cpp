@@ -32,11 +32,12 @@
 
 #include "astra_camera/astra_driver.h"
 #include "astra_camera/astra_exception.h"
+#include "astra_camera/delete_this_fake_cv_bridge.hpp"
 
 #include <unistd.h>  
 #include <stdlib.h>  
 #include <stdio.h>  
-#include <sys/shm.h>  
+#include <sys/shm.h>
 
 #include <sensor_msgs/distortion_models.hpp>
 #include <sensor_msgs/image_encodings.hpp>
@@ -148,6 +149,7 @@ AstraDriver::AstraDriver(rclcpp::node::Node::SharedPtr& n, rclcpp::node::Node::S
   ROS_DEBUG("Dynamic reconfigure configuration received.");
 */
   z_scaling_ = 1.0;
+
   z_offset_mm_ = 0;
 
   AstraVideoMode color_video_mode{width, height, framerate, PIXEL_FORMAT_RGB888};
@@ -602,7 +604,14 @@ void AstraDriver::newDepthFrameCallback(sensor_msgs::msg::Image::SharedPtr image
 
       //if (depth_subscribers_ )
       {
-        sensor_msgs::msg::Image::SharedPtr floating_point_image = rawToFloatingPointConversion(image);
+        auto src_cv_img = matFromImage(*image);
+        auto dst_cv_img = src_cv_img.clone();
+        //cv::GaussianBlur(src_cv_img, dst_cv_img, cv::Size(5, 5), 5.0, 5.0);
+        //cv::blur(src_cv_img, dst_cv_img, cv::Size(5, 5));
+        cv::medianBlur(src_cv_img, dst_cv_img, 5);
+        auto blurred_image = toImageMsg(dst_cv_img, image->header, image->encoding);
+
+        sensor_msgs::msg::Image::SharedPtr floating_point_image = rawToFloatingPointConversion(blurred_image);
         sensor_msgs::msg::PointCloud2::SharedPtr cloud_msg = std::make_shared<sensor_msgs::msg::PointCloud2>();
         DepthImageToPointCloud2(floating_point_image, cam_info, cloud_msg);
         //pub_depth_.publish(floating_point_image, cam_info);
