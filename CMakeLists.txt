@@ -10,6 +10,8 @@ find_package(sensor_msgs REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(rmw_implementation_cmake REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread)
+find_package(image_geometry REQUIRED)
+find_package(OpenCV 3.2.0 REQUIRED HINTS ${CMAKE_SOURCE_DIR}/../../install/share)
 
 option(FILTER "OB Filter library" ON)
 
@@ -54,6 +56,7 @@ ament_target_dependencies(astra_wrapper
   "builtin_interfaces"
   "rclcpp"
   "sensor_msgs"
+  "image_geometry"
 )
 target_link_libraries(astra_wrapper -lOpenNI2Orbbec ${Boost_LIBRARIES})
 add_dependencies(astra_wrapper astra_openni2)
@@ -64,7 +67,7 @@ ament_target_dependencies(astra_driver_lib
   "rclcpp"
   "sensor_msgs"
 )
-target_link_libraries(astra_driver_lib astra_wrapper ${Boost_LIBRARIES})
+target_link_libraries(astra_driver_lib astra_wrapper ${Boost_LIBRARIES} ${OpenCV_LIBS})
 add_dependencies(astra_driver_lib astra_openni2)
 
 add_executable(astra_camera_node
@@ -73,8 +76,30 @@ add_executable(astra_camera_node
 target_link_libraries(astra_camera_node astra_driver_lib)
 add_dependencies(astra_camera_node astra_openni2)
 
+add_executable(list_devices
+   src/list_devices.cpp
+)
+target_link_libraries(list_devices astra_wrapper)
+
+add_executable(usb_reset
+        src/usb_reset.c
+)
+target_link_libraries(usb_reset astra_wrapper)
+
 install(TARGETS astra_camera_node
   DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/
+)
+
+install(TARGETS list_devices
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/
+)
+
+install(TARGETS usb_reset
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/
+)
+
+install(TARGETS astra_wrapper astra_driver_lib
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/
 )
 
 install(FILES ${CMAKE_BINARY_DIR}/openni2/Redist/libOpenNI2Orbbec.so
@@ -86,7 +111,9 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/openni2/Redist/OpenNI2
 )
 
 install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CMAKE_INSTALL_PREFIX}/include/
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME}/
 )
 
+ament_export_include_directories(include)
+ament_export_libraries(astra_driver_lib astra_wrapper)
 ament_package()

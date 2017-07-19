@@ -37,6 +37,8 @@
 #include <rcl/time.h>
 #include <sensor_msgs/image_encodings.hpp>
 
+#include <chrono>
+
 #define TIME_FILTER_LENGTH 15
 
 namespace astra_wrapper
@@ -68,31 +70,31 @@ void AstraFrameListener::onNewFrame(openni::VideoStream& stream)
     sensor_msgs::msg::Image::SharedPtr image(new sensor_msgs::msg::Image);
 
     //ros::Time ros_now = ros::Time::now();
-    rcutils_time_point_value_t ros_now;
-    if (rcutils_system_time_now(&ros_now) != RCUTILS_RET_OK)
-    {
-      ROS_ERROR("Failed to get current time; ignoring frame");
-      return;
-    }
+    auto time_point = std::chrono::system_clock::now();
+    builtin_interfaces::msg::Time msg;
+    uint64_t nanoseconds_since_epoch = static_cast<uint64_t>(
+            std::chrono::time_point_cast<std::chrono::nanoseconds>(time_point).time_since_epoch().count());
+    msg.sec = static_cast<int32_t>(nanoseconds_since_epoch / 1000000000U);
+    msg.nanosec = static_cast<uint32_t>(nanoseconds_since_epoch % 1000000000U);
 
     if (!user_device_timer_)
     {
       //image->header.stamp = ros_now;
-      image->header.stamp.sec = ros_now / 1000000000;
-      image->header.stamp.nanosec = ros_now - image->header.stamp.sec * 1000000000;
+      image->header.stamp.sec = msg.sec;
+      image->header.stamp.nanosec = msg.nanosec;
 
       //ROS_DEBUG("Time interval between frames: %.4f ms", (float)((ros_now.toSec()-prev_time_stamp_)*1000.0));
-      ROS_DEBUG("Time interval between frames: %.4f ms", (float)((ros_now/1000000000-prev_time_stamp_)*1000.0));
+      ROS_DEBUG("Time interval between frames: %.4f ms", (float)((nanoseconds_since_epoch/1000000000-prev_time_stamp_)*1000.0));
 
       //prev_time_stamp_ = ros_now.toSec();
-      prev_time_stamp_ = ros_now/1000000000;
+      prev_time_stamp_ = nanoseconds_since_epoch/1000000000;
     } else
     {
       uint64_t device_time = m_frame.getTimestamp();
 
       double device_time_in_sec = static_cast<double>(device_time)/1000000.0;
       //double ros_time_in_sec = ros_now.toSec();
-      double ros_time_in_sec = ros_now/1000000000;
+      double ros_time_in_sec = nanoseconds_since_epoch/1000000000;
 
       double time_diff = ros_time_in_sec-device_time_in_sec;
 

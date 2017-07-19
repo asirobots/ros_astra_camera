@@ -41,11 +41,13 @@ static std::string get_command_option(const std::vector<std::string> &args, cons
   return std::string();
 }
 
-static bool parse_command_options(int argc, char **argv, size_t *width, size_t *height,
+static bool parse_command_options(int argc, char **argv, std::string *devicenum_str, size_t *width, size_t *height,
                                   double *framerate, size_t *depth_width, size_t *depth_height,
-                                  double *depth_framerate, astra_wrapper::PixelFormat *dformat)
+                                  double *depth_framerate, astra_wrapper::PixelFormat *dformat, double *max_depth)
 {
   std::vector<std::string> args(argv, argv + argc);
+
+  *devicenum_str = get_command_option(args, "-n");
 
   std::string width_str = get_command_option(args, "-w");
   if (!width_str.empty()) {
@@ -77,6 +79,11 @@ static bool parse_command_options(int argc, char **argv, size_t *width, size_t *
     *depth_framerate = std::stod(dframerate_str.c_str());
   }
 
+  std::string dmaxdepth_str = get_command_option(args, "-md");
+  if (!dmaxdepth_str.empty()) {
+    *max_depth = std::stod(dmaxdepth_str.c_str());
+  }
+
   std::string dformat_str = get_command_option(args, "-dformat");
   if (!dformat_str.empty()) {
     if (dformat_str == "1MM") {
@@ -105,11 +112,14 @@ int main(int argc, char **argv){
   size_t dwidth = 640;
   size_t dheight = 480;
   double dframerate = 30;
+  double dmaxdepth = 8.0;
   astra_wrapper::PixelFormat dformat = astra_wrapper::PixelFormat::PIXEL_FORMAT_DEPTH_1_MM;
+
+  std::string device_num = "";
 
   // TODO(clalancette): parsing the command-line options here is temporary until
   // we get parameters working in ROS2.
-  if (!parse_command_options(argc, argv, &width, &height, &framerate, &dwidth, &dheight, &dframerate, &dformat)) {
+  if (!parse_command_options(argc, argv, &device_num, &width, &height, &framerate, &dwidth, &dheight, &dframerate, &dformat, &dmaxdepth)) {
     return 1;
   }
 
@@ -117,7 +127,7 @@ int main(int argc, char **argv){
   rclcpp::node::Node::SharedPtr n = rclcpp::node::Node::make_shared("astra_camera");
   rclcpp::node::Node::SharedPtr pnh = rclcpp::node::Node::make_shared("astra_camera_");
 
-  astra_wrapper::AstraDriver drv(n, pnh, width, height, framerate, dwidth, dheight, dframerate, dformat);
+  astra_wrapper::AstraDriver drv(n, pnh, device_num, width, height, framerate, dwidth, dheight, dframerate, dformat, dmaxdepth);
 
   rclcpp::spin(n);
 
