@@ -11,7 +11,7 @@ find_package(builtin_interfaces REQUIRED)
 find_package(rmw_implementation_cmake REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system thread regex)
 find_package(image_geometry REQUIRED)
-find_package(OpenCV 3.2.0 REQUIRED COMPONENTS core imgproc)
+find_package(OpenCV 2.4 REQUIRED COMPONENTS core imgproc)
 
 option(FILTER "OB Filter library" ON)
 
