@@ -53,12 +53,13 @@
 namespace astra_wrapper
 {
 
-AstraDriver::AstraDriver(rclcpp::node::Node::SharedPtr& n, rclcpp::node::Node::SharedPtr& pnh, std::string device_num, size_t width, size_t height, double framerate, size_t dwidth, size_t dheight, double dframerate, PixelFormat dformat, double dmaxdepth) :
+AstraDriver::AstraDriver(rclcpp::node::Node::SharedPtr& n, rclcpp::node::Node::SharedPtr& pnh, std::string device_num, size_t width, size_t height, double framerate, size_t dwidth, size_t dheight, double dframerate, PixelFormat dformat, double dmaxdepth, int icornerclippixels) :
     nh_(n),
     pnh_(pnh),
     device_manager_(AstraDeviceManager::getSingelton()),
     device_id_(device_num),
     max_depth_(dmaxdepth),
+    corner_clip_pixels_(icornerclippixels),
     config_init_(false),
     depth_registration_(false),
     data_skip_ir_counter_(0),
@@ -1146,9 +1147,9 @@ void AstraDriver::DepthImageToPointCloud2(sensor_msgs::msg::Image::SharedPtr & f
     model.fromCameraInfo(cam_info);
 
     if (float_image->encoding == sensor_msgs::image_encodings::TYPE_16UC1) {
-        depth_to_pointcloud::convert<uint16_t>(float_image, cloud, model, max_depth_);
+        depth_to_pointcloud::convert<uint16_t>(float_image, cloud, model, max_depth_, corner_clip_pixels_);
     } else if (float_image->encoding == sensor_msgs::image_encodings::TYPE_32FC1) {
-        depth_to_pointcloud::convert<float>(float_image, cloud, model, max_depth_);
+        depth_to_pointcloud::convert<float>(float_image, cloud, model, max_depth_, corner_clip_pixels_);
     } else {
         fprintf(stderr, "Depth image has unsupported encoding [%s]\n", float_image->encoding.c_str());
     }

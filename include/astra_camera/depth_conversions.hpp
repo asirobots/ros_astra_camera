@@ -52,7 +52,8 @@ void convert(
   const sensor_msgs::msg::Image::ConstSharedPtr & depth_msg,
   sensor_msgs::msg::PointCloud2::SharedPtr & cloud_msg,
   const image_geometry::PinholeCameraModel & model,
-  double range_max = 0.0)
+  double range_max = 0.0,
+  int corner_clip_pixels = 0)
 {
   // Use correct principal point from calibration
   float center_x = model.cx();
@@ -82,7 +83,7 @@ void convert(
 
       auto depth_meters = DepthTraits<T>::toMeters(depth);
 
-      if (depth_meters < range_max)
+      if (depth_meters < range_max && !(v + u < corner_clip_pixels) && !(v + (depth_msg->width - u - 1) < corner_clip_pixels))
       {
         // Fill in XYZ
         *iter_x = (u - center_x) * depth * constant_x;
