@@ -53,7 +53,8 @@ void convert(
   sensor_msgs::msg::PointCloud2::SharedPtr & cloud_msg,
   const image_geometry::PinholeCameraModel & model,
   double range_max = 0.0,
-  int corner_clip_pixels = 0)
+  int corner_clip_pixels = 0,
+  int left_side_clip_pixels = 0)
 {
   // Use correct principal point from calibration
   float center_x = model.cx();
@@ -73,7 +74,7 @@ void convert(
   const T * depth_row = reinterpret_cast<const T *>(&depth_msg->data[0]);
   int row_step = depth_msg->step / sizeof(T);
   for (int v = 0; v < static_cast<int>(depth_msg->height); ++v, depth_row += row_step) {
-    for (int u = 0; u < static_cast<int>(depth_msg->width); ++u) {
+    for (int u = left_side_clip_pixels; u < static_cast<int>(depth_msg->width); ++u) {
       T depth = depth_row[u];
 
       if (!DepthTraits<T>::valid(depth))

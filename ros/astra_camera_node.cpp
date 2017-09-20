@@ -43,7 +43,7 @@ static std::string get_command_option(const std::vector<std::string> &args, cons
 
 static bool parse_command_options(int argc, char **argv, std::string *devicenum_str, size_t *width, size_t *height,
                                   double *framerate, size_t *depth_width, size_t *depth_height,
-                                  double *depth_framerate, astra_wrapper::PixelFormat *dformat, double *max_depth, int *corner_clip_pixels)
+                                  double *depth_framerate, astra_wrapper::PixelFormat *dformat, double *max_depth, int *corner_clip_pixels, int *left_side_clip_pixels)
 {
   std::vector<std::string> args(argv, argv + argc);
 
@@ -83,10 +83,15 @@ static bool parse_command_options(int argc, char **argv, std::string *devicenum_
   if (!dmaxdepth_str.empty()) {
     *max_depth = std::stod(dmaxdepth_str.c_str());
   }
-    
+  
   std::string icornerclippixels_str = get_command_option(args, "-cp");
   if (!icornerclippixels_str.empty()) {
     *corner_clip_pixels = std::stod(icornerclippixels_str.c_str());
+  }
+
+  std::string ileftsideclippixels_str = get_command_option(args, "-lcp");
+  if (!ileftsideclippixels_str.empty()) {
+    *left_side_clip_pixels = std::stod(ileftsideclippixels_str.c_str());
   }
 
   std::string dformat_str = get_command_option(args, "-dformat");
@@ -119,13 +124,14 @@ int main(int argc, char **argv){
   double dframerate = 30;
   double dmaxdepth = 8.0;
   int icornerclippixels = 0;
+  int ileftsideclippixels = 0;
   astra_wrapper::PixelFormat dformat = astra_wrapper::PixelFormat::PIXEL_FORMAT_DEPTH_1_MM;
 
   std::string device_num = "";
 
   // TODO(clalancette): parsing the command-line options here is temporary until
   // we get parameters working in ROS2.
-  if (!parse_command_options(argc, argv, &device_num, &width, &height, &framerate, &dwidth, &dheight, &dframerate, &dformat, &dmaxdepth, &icornerclippixels)) {
+  if (!parse_command_options(argc, argv, &device_num, &width, &height, &framerate, &dwidth, &dheight, &dframerate, &dformat, &dmaxdepth, &icornerclippixels, &ileftsideclippixels)) {
     return 1;
   }
 
@@ -133,7 +139,7 @@ int main(int argc, char **argv){
   rclcpp::node::Node::SharedPtr n = rclcpp::node::Node::make_shared("astra_camera");
   rclcpp::node::Node::SharedPtr pnh = rclcpp::node::Node::make_shared("astra_camera_");
 
-  astra_wrapper::AstraDriver drv(n, pnh, device_num, width, height, framerate, dwidth, dheight, dframerate, dformat, dmaxdepth, icornerclippixels);
+  astra_wrapper::AstraDriver drv(n, pnh, device_num, width, height, framerate, dwidth, dheight, dframerate, dformat, dmaxdepth, icornerclippixels, ileftsideclippixels);
 
   rclcpp::spin(n);
 

@@ -71,7 +71,7 @@ class AstraDriver
 public:
   //AstraDriver(ros::NodeHandle& n, ros::NodeHandle& pnh) ;
   AstraDriver(rclcpp::node::Node::SharedPtr& n, rclcpp::node::Node::SharedPtr& pnh, std::string device_num, size_t width, size_t height, double framerate,
-              size_t dwidth, size_t dheight, double dframerate, PixelFormat dformat, double dmaxdepth, int icornerclippixels);
+              size_t dwidth, size_t dheight, double dframerate, PixelFormat dformat, double dmaxdepth, int icornerclippixels, int leftsideclippixels);
 
 private:
   //typedef astra_camera::AstraConfig Config;
@@ -126,6 +126,7 @@ private:
   std::string device_id_;
   double max_depth_;
   int corner_clip_pixels_;
+  int left_side_clip_pixels_;
 
   /** \brief get_serial server*/
   //ros::ServiceServer get_serial_server;
