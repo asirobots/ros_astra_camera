@@ -168,7 +168,7 @@ void AstraDriver::advertiseROSTopics()
   rmw_qos_profile_t custom_camera_qos_profile = rmw_qos_profile_default;
 
   custom_camera_qos_profile.depth = 1;
-  custom_camera_qos_profile.reliability = RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT;
+  custom_camera_qos_profile.reliability = RMW_QOS_POLICY_RELIABILITY_RELIABLE;
   custom_camera_qos_profile.history = RMW_QOS_POLICY_HISTORY_KEEP_LAST;
 
   // Allow remapping namespaces rgb, ir, depth, depth_registered
