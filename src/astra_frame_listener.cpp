@@ -36,7 +36,7 @@
 
 #include <rcl/time.h>
 #include <sensor_msgs/image_encodings.hpp>
-
+#include <cmath>
 #include <chrono>
 
 #define TIME_FILTER_LENGTH 15
@@ -94,7 +94,7 @@ void AstraFrameListener::onNewFrame(openni::VideoStream& stream)
 
       double device_time_in_sec = static_cast<double>(device_time)/1000000.0;
       //double ros_time_in_sec = ros_now.toSec();
-      double ros_time_in_sec = nanoseconds_since_epoch/1000000000;
+      double ros_time_in_sec = nanoseconds_since_epoch/1000000000.0;
 
       double time_diff = ros_time_in_sec-device_time_in_sec;
 
@@ -105,8 +105,8 @@ void AstraFrameListener::onNewFrame(openni::VideoStream& stream)
       double corrected_timestamp = device_time_in_sec+filtered_time_diff;
 
       //image->header.stamp.fromSec(corrected_timestamp);
-      image->header.stamp.sec = floor(corrected_timestamp);
-      image->header.stamp.nanosec = (corrected_timestamp - floor(corrected_timestamp)) * 1000000000;
+      image->header.stamp.sec = std::floor(corrected_timestamp);
+      image->header.stamp.nanosec = (corrected_timestamp - std::floor(corrected_timestamp)) * 1000000000;
 
       ROS_DEBUG("Time interval between frames: %.4f ms", (float)((corrected_timestamp-prev_time_stamp_)*1000.0));
 
