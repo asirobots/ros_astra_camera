@@ -9,7 +9,7 @@ find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(rmw_implementation_cmake REQUIRED)
-find_package(Boost REQUIRED COMPONENTS system thread regex)
+find_package(Boost REQUIRED COMPONENTS system thread)
 find_package(image_geometry REQUIRED)
 find_package(OpenCV 2.4 REQUIRED COMPONENTS core imgproc)
 
@@ -58,7 +58,7 @@ ament_target_dependencies(astra_wrapper
   "sensor_msgs"
   "image_geometry"
 )
-target_link_libraries(astra_wrapper -lOpenNI2Orbbec ${Boost_LIBRARIES})
+target_link_libraries(astra_wrapper ${Boost_LIBRARIES} -lOpenNI2Orbbec)
 add_dependencies(astra_wrapper astra_openni2)
 
 add_library(astra_driver_lib src/astra_driver.cpp)
@@ -67,7 +67,7 @@ ament_target_dependencies(astra_driver_lib
   "rclcpp"
   "sensor_msgs"
 )
-target_link_libraries(astra_driver_lib astra_wrapper ${Boost_LIBRARIES} opencv_core opencv_imgproc)
+target_link_libraries(astra_driver_lib ${Boost_LIBRARIES} astra_wrapper opencv_core opencv_imgproc)
 add_dependencies(astra_driver_lib astra_openni2)
 
 add_executable(astra_camera_node
